@@ -5,10 +5,6 @@ import sys
 sys.path.append("./")
 sys.setrecursionlimit(10000000)
 import os
-import hashlib
-import shutil
-from pymediainfo import MediaInfo
-import json
 import multiprocessing
 
 srcdir = "D:\\youtube-dl" #需要压缩的目录
