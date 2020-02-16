@@ -31,7 +31,7 @@ def trans_all():
         # print("3:",file_name_list)  #当前主目录下的所有文件
         for filename in file_name_list:
             apath = os.path.join(maindir, filename)#合并成一个完整路径
-            bpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir,''),filename)
+            bpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir,''),filename+'.mp4')
             outpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir,''))
             if not os.path.exists(outpath):
                 os.makedirs(outpath)
