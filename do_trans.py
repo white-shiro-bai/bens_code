@@ -183,8 +183,10 @@ def play():
                                 elif main_side == 1 and org[0]/org[1] <=1:#竖屏视频，适配竖边
                                     tar_res = ' -s {width}x{height} '.format(width=avoid_odd(int(org[0]/org[1]*res_list[res][0])),height=res_list[res][0])
                             else:
-                                continue
+                                res = 'org'
+                                tar_res = ''
                         else:
+                            res = 'org'
                             tar_res = ''
                         for coder in target_coder.split(','):
                             if with_args == '1' :
