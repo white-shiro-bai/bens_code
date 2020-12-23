@@ -182,6 +182,8 @@ def play():
                                     tar_res = ' -s {width}x{height} '.format(width=res_list[res][1],height=avoid_odd(int(org[0]/org[1]*res_list[res][0])))
                                 elif main_side == 1 and org[0]/org[1] <=1:#竖屏视频，适配竖边
                                     tar_res = ' -s {width}x{height} '.format(width=avoid_odd(int(org[0]/org[1]*res_list[res][0])),height=res_list[res][0])
+                            else:
+                                continue
                         else:
                             tar_res = ''
                         for coder in target_coder.split(','):
@@ -209,6 +211,8 @@ def do_trans(org,tar,target_q,target_speed,target_audio,res,coder):
     if not os.path.exists(tar):
         params ='-i '+ '"' + org +'" '+ res + ' -c:v '+ coder + ' -preset ' +target_speed + target_q + target_audio +'"'+ tar +'"'
         path_01= "ffmpeg {params}".format(params=params)
+        if sys.platform != 'win32':
+            path_01 = './'+ path_01
         print(path_01)
         r_v = os.system(path_01)
         return r_v
