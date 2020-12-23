@@ -137,11 +137,11 @@ def get_org_ratio(org_width,org_height):
     return main
 
 def avoid_odd(odd):
-  #如遇奇数，自动+1，防止转码参数里出现奇数
-  if odd%2 ==0:
-    return odd
-  else:
-    return odd+1
+    #如遇奇数，自动+1，防止转码参数里出现奇数
+    if odd%2 ==0:
+        return odd
+    else:
+        return odd+1
 
 def play():
     print('已知问题：iPhone6,6p拍摄的竖屏视频无法正常识别方向，转码只能转原尺寸，缩尺寸时会出错')
