@@ -152,13 +152,17 @@ def play():
         tardir = os.path.join(srcdir,"encoded") #输出的目录
     tread_str = ui(data={"limit_func":True,"desc":"输入同时转码的数量，建议等同CPU的数量。如果源文件分辨率很小，则可以最高3倍于CPU的数量。不输入默认同时只转码1个","type":"keyword","display_key":"同时转码数","allow_none":True})[0]
     tread = int(tread_str) if tread_str and tread_str !='' else 1
-    target_res = ui(data={"limit_func":True,"desc":"选择要输出的尺寸，可以用逗号隔开多选，大尺寸可以转小尺寸，小尺寸不会放大","type":"option","display_key":"func_id","func_key":"res","data":[{"func_id":1,"res":"org","func_name":"原始分辨率"},{"func_id":2,"res":"4k","func_name":"最大3840x2160"},{"func_id":3,"res":"2k","func_name":"最大2560x1440"},{"func_id":4,"res":"fullhd","func_name":"最大1920x1080"},{"func_id":5,"res":"hd","func_name":"最大1280x720"},{"func_id":6,"res":"xga","func_name":"最大1024x576"},{"func_id":7,"res":"sd","func_name":"最大848x480"},{"func_id":8,"res":"360","func_name":"最大640x360"}]})[0]
-    res_list = {"4k":[3840,2160],"2k":[2560,1440],"fullhd":[1920,1080],"hd":[1280,720],"xga":[1024,768],"sd":[852,480],"360":[640,360]}
-    target_coder = ui(data={"limit_func":True,"desc":"选择要输出的格式，可以用逗号隔开多选","type":"option","display_key":"func_id","func_key":"coder","data":[{"func_id":1,"coder":"libx264","func_name":"x264（更快更通用，推荐）"},{"func_id":2,"coder":"libx265","func_name":"x265（理论上会更小，但非常看片源）"}]})[0]
-    target_q = ui(data={"limit_func":True,"desc":"选择要压缩的质量（单选）","type":"option","display_key":"func_id","func_key":"q","data":[{"func_id":1,"q":" -crf 24 ","func_name":"相对较好的视频质量（推荐）"},{"func_id":2,"q":" -crf 25 ","func_name":"视频网站常用的压缩质量，有一定马赛克或模糊"},{"func_id":3,"q":" -crf 26 ","func_name":"低质量视频网站的压缩质量，马赛克较为频繁，肉眼可见的画质变差"},{"func_id":4,"q":" -crf 22 ","func_name":"一般BDRip和DVDRip的质量，画质干净，不放在一起对比基本就是原盘质量"},{"func_id":5,"q":" -crf 18 ","func_name":"视觉无损，除非原片质量非常高，否则用不上"},{"func_id":6,"q":" -crf 28 ","func_name":"x265默认"},{"func_id":7,"q":" -crf 29 ","func_name":"有影就行的质量"}]})[0]
-    target_speed = ui(data={"limit_func":True,"desc":"选择算法复杂度（单选）","type":"option","display_key":"func_id","func_key":"s","data":[{"func_id":1,"s":"veryslow","func_name":"压得慢压的小（推荐）"},{"func_id":2,"s":"slower","func_name":"压得不是最小，但是会快一些"},{"func_id":3,"s":"slow","func_name":"稍微有点意义的压缩"},{"func_id":4,"s":"medium","func_name":"压了个寂寞，仅在缩小画面时用"}]})[0]
-    target_audio = ui(data={"limit_func":True,"desc":"选择需要的音频质量（单选）","type":"option","display_key":"func_id","func_key":"a","data":[{"func_id":1,"a":" -c:a copy ","func_name":"直接拷贝音频（推荐）"},{"func_id":2,"a":"  -c:a aac -vbr 1 ","func_name":"尽可能压缩声音，基本能听"},{"func_id":3,"a":"  -c:a aac -vbr 6 ","func_name":"尽可能高音质（除非音源好，不然没必要）"},{"func_id":4,"a":"  -c:a aac -vbr 3 ","func_name":"普通音质"}]})[0]
-    with_args = ui(data={"limit_func":True,"desc":"转码输出文件是否包含参数信息","type":"option","display_key":"func_id","func_key":"func_id","data":[{"func_id":1,"func_name":"包含参数，方便对比转码质量（推荐）"},{"func_id":2,"func_name":"不包含参数，不支持同时转多版本"}]})[0]
+    func_code = ui(data={"limit_func":True,"desc":"选择要实现的功能","type":"option","display_key":"func_id","func_key":"coder","data":[{"func_id":1,"coder":"encode","func_name":"转码"},{"func_id":2,"coder":"snap","func_name":"截图"}]})[0]
+    if func_code == 'encode':
+        target_res = ui(data={"limit_func":True,"desc":"选择要输出的尺寸，可以用逗号隔开多选，大尺寸可以转小尺寸，小尺寸不会放大","type":"option","display_key":"func_id","func_key":"res","data":[{"func_id":1,"res":"org","func_name":"原始分辨率"},{"func_id":2,"res":"4k","func_name":"最大3840x2160"},{"func_id":3,"res":"2k","func_name":"最大2560x1440"},{"func_id":4,"res":"fullhd","func_name":"最大1920x1080"},{"func_id":5,"res":"hd","func_name":"最大1280x720"},{"func_id":6,"res":"xga","func_name":"最大1024x576"},{"func_id":7,"res":"sd","func_name":"最大848x480"},{"func_id":8,"res":"360","func_name":"最大640x360"}]})[0]
+        res_list = {"4k":[3840,2160],"2k":[2560,1440],"fullhd":[1920,1080],"hd":[1280,720],"xga":[1024,768],"sd":[852,480],"360":[640,360]}
+        target_coder = ui(data={"limit_func":True,"desc":"选择要输出的格式，可以用逗号隔开多选","type":"option","display_key":"func_id","func_key":"coder","data":[{"func_id":1,"coder":"libx264","func_name":"x264（更快更通用，推荐）"},{"func_id":2,"coder":"libx265","func_name":"x265（理论上会更小，但非常看片源）"}]})[0]
+        target_q = ui(data={"limit_func":True,"desc":"选择要压缩的质量（单选）","type":"option","display_key":"func_id","func_key":"q","data":[{"func_id":1,"q":" -crf 24 ","func_name":"相对较好的视频质量（推荐）"},{"func_id":2,"q":" -crf 25 ","func_name":"视频网站常用的压缩质量，有一定马赛克或模糊"},{"func_id":3,"q":" -crf 26 ","func_name":"低质量视频网站的压缩质量，马赛克较为频繁，肉眼可见的画质变差"},{"func_id":4,"q":" -crf 22 ","func_name":"一般BDRip和DVDRip的质量，画质干净，不放在一起对比基本就是原盘质量"},{"func_id":5,"q":" -crf 18 ","func_name":"视觉无损，除非原片质量非常高，否则用不上"},{"func_id":6,"q":" -crf 28 ","func_name":"x265默认"},{"func_id":7,"q":" -crf 29 ","func_name":"有影就行的质量"}]})[0]
+        target_speed = ui(data={"limit_func":True,"desc":"选择算法复杂度（单选）","type":"option","display_key":"func_id","func_key":"s","data":[{"func_id":1,"s":"veryslow","func_name":"压得慢压的小（推荐）"},{"func_id":2,"s":"slower","func_name":"压得不是最小，但是会快一些"},{"func_id":3,"s":"slow","func_name":"稍微有点意义的压缩"},{"func_id":4,"s":"medium","func_name":"压了个寂寞，仅在缩小画面时用"},{"func_id":5,"s":"faster","func_name":"压缩比不高，缩小画面或者做无压缩的代理文件时用"}]})[0]
+        target_audio = ui(data={"limit_func":True,"desc":"选择需要的音频质量（单选）","type":"option","display_key":"func_id","func_key":"a","data":[{"func_id":1,"a":" -c:a copy ","func_name":"直接拷贝音频（推荐）"},{"func_id":2,"a":"  -c:a aac -vbr 1 ","func_name":"尽可能压缩声音，基本能听"},{"func_id":3,"a":"  -c:a aac -vbr 6 ","func_name":"尽可能高音质（除非音源好，不然没必要）"},{"func_id":4,"a":"  -c:a aac -vbr 3 ","func_name":"普通音质"}]})[0]
+        with_args = ui(data={"limit_func":True,"desc":"转码输出文件是否包含参数信息","type":"option","display_key":"func_id","func_key":"func_id","data":[{"func_id":1,"func_name":"包含参数，方便对比转码质量（推荐）"},{"func_id":2,"func_name":"不包含参数，不支持同时转多版本"}]})[0]
+    elif func_code == 'snap':
+        gap = ui(data={"limit_func":True,"desc":"请输入截图的间隔，单位秒，可以支持小数点","type":"keyword","display_key":"截图间隔（秒）","allow_none":False})[0]
     #拿到目录下的所有文件
     job_list = []#所有文件
     for maindir, subdir, file_name_list in os.walk(srcdir):
@@ -170,40 +174,49 @@ def play():
             if tardir not in apath:
                 org = GetFileInfo(filename=apath)
                 if org[0] and org[1]:
-                    main_side = get_org_ratio(org_width=org[0],org_height=org[1])
-                    for res in target_res.split(','):
-                        if res in res_list:
-                            if org[main_side] >= res_list[res][0]:
-                                if main_side == 0 and org[0]/org[1] >1:#横屏视频，适配横边
-                                    tar_res = ' -s {width}x{height} '.format(width=res_list[res][0],height=avoid_odd(int(org[1]/org[0]*res_list[res][0])))
-                                elif main_side == 1 and org[0]/org[1] >1:#横屏视频，适配高边
-                                    tar_res = ' -s {width}x{height} '.format(width=avoid_odd(int(org[0]/org[1]*res_list[res][1])),height=res_list[res][1])
-                                elif main_side == 0 and org[0]/org[1] <=1:#竖竖屏视频，适配横边
-                                    tar_res = ' -s {width}x{height} '.format(width=res_list[res][1],height=avoid_odd(int(org[0]/org[1]*res_list[res][0])))
-                                elif main_side == 1 and org[0]/org[1] <=1:#竖屏视频，适配竖边
-                                    tar_res = ' -s {width}x{height} '.format(width=avoid_odd(int(org[0]/org[1]*res_list[res][0])),height=res_list[res][0])
+                    if func_code == 'encode':
+                        main_side = get_org_ratio(org_width=org[0],org_height=org[1])
+                        for res in target_res.split(','):
+                            if res in res_list:
+                                if org[main_side] >= res_list[res][0]:
+                                    if main_side == 0 and org[0]/org[1] >1:#横屏视频，适配横边
+                                        tar_res = ' -s {width}x{height} '.format(width=res_list[res][0],height=avoid_odd(int(org[1]/org[0]*res_list[res][0])))
+                                    elif main_side == 1 and org[0]/org[1] >1:#横屏视频，适配高边
+                                        tar_res = ' -s {width}x{height} '.format(width=avoid_odd(int(org[0]/org[1]*res_list[res][1])),height=res_list[res][1])
+                                    elif main_side == 0 and org[0]/org[1] <=1:#竖竖屏视频，适配横边
+                                        tar_res = ' -s {width}x{height} '.format(width=res_list[res][1],height=avoid_odd(int(org[0]/org[1]*res_list[res][0])))
+                                    elif main_side == 1 and org[0]/org[1] <=1:#竖屏视频，适配竖边
+                                        tar_res = ' -s {width}x{height} '.format(width=avoid_odd(int(org[0]/org[1]*res_list[res][0])),height=res_list[res][0])
+                                else:
+                                    res = 'org'
+                                    tar_res = ''
                             else:
                                 res = 'org'
                                 tar_res = ''
-                        else:
-                            res = 'org'
-                            tar_res = ''
-                        for coder in target_coder.split(','):
-                            if with_args == '1' :
-                                bpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''),filename+'_'+res+'_'+coder+'_'+target_q[-3:-1]+'_'+target_speed+'.mp4')
-                            elif with_args == '2':
-                                bpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''),filename.replace('.'+filename.split('.')[-1],'')+'.mp4')
-                            outpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''))
-                            # bpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''),res,coder,filename+'.mp4')
-                            # outpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''),res,coder)
-                            if not os.path.exists(outpath):
-                                os.makedirs(outpath)
-                            info_list.append({"org": apath,"tar":bpath,"target_q":target_q,"target_speed":target_speed,"target_audio":target_audio,"res":tar_res,"coder":coder})
-
-    print(info_list)
+                            for coder in target_coder.split(','):
+                                if with_args == '1' :
+                                    bpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''),filename+'_'+res+'_'+coder+'_'+target_q[-3:-1]+'_'+target_speed+'.mp4')
+                                elif with_args == '2':
+                                    bpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''),filename.replace('.'+filename.split('.')[-1],'')+'.mp4')
+                                outpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''))
+                                # bpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''),res,coder,filename+'.mp4')
+                                # outpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''),res,coder)
+                                if not os.path.exists(outpath):
+                                    os.makedirs(outpath)
+                                info_list.append({"org": apath,"tar":bpath,"target_q":target_q,"target_speed":target_speed,"target_audio":target_audio,"res":tar_res,"coder":coder})
+                    elif func_code == 'snap':
+                        outpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''))
+                        if not os.path.exists(outpath):
+                                    os.makedirs(outpath)
+                        bpath = os.path.join(tardir,maindir.replace(srcdir+'\\','').replace(srcdir+'/','').replace(srcdir,''),filename)
+                        info_list.append({"org": apath,"tar":bpath,"gap":gap})
+    # print(info_list)
     p = multiprocessing.Pool(processes = tread)
     for keys in info_list:
-        p.apply_async(func=do_trans, kwds=keys)
+        if func_code == 'encode':
+            p.apply_async(func=do_trans, kwds=keys)
+        elif func_code == 'snap':
+            p.apply_async(func=do_snap, kwds=keys)
     p.close()
     p.join()
 
@@ -212,6 +225,19 @@ def play():
 def do_trans(org,tar,target_q,target_speed,target_audio,res,coder):
     if not os.path.exists(tar):
         params ='-i '+ '"' + org +'" '+ res + ' -c:v '+ coder + ' -preset ' +target_speed + target_q + target_audio +'"'+ tar +'"'
+        path_01= "ffmpeg {params}".format(params=params)
+        if sys.platform != 'win32':
+            path_01 = './'+ path_01
+        print(path_01)
+        try:
+            r_v = os.system(path_01)
+            return r_v
+        except:
+            pass
+
+def do_snap(org,tar,gap):
+    if not os.path.exists(tar):
+        params ='-i "{org}" -r {gap} -q:v 2 -f image2 "{tar}-%3d.jpg"'.format(org=org,tar=tar,gap=gap)
         path_01= "ffmpeg {params}".format(params=params)
         if sys.platform != 'win32':
             path_01 = './'+ path_01

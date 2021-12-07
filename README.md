@@ -1,3 +1,10 @@
+<!--
+ * @Date: 2021-11-26 14:34:48
+ * @Author: unknowwhite@outlook.com
+ * @WeChat: Ben_Xiaobai
+ * @LastEditTime: 2021-12-07 16:04:28
+ * @FilePath: \bens_code\README.md
+-->
 调用ffmpeg压缩视频文件
 
 
@@ -7,6 +14,8 @@
 预制一些参数，更加易用。也没有收费软件不购买不能转4K的问题。
 
 提供了简单的集群转码功能。多台电脑一起转。
+
+提供了截图功能，可以批量对视频进行截图。
 
 # 特性
 
