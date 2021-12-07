@@ -2,7 +2,7 @@
  * @Date: 2021-11-26 14:34:48
  * @Author: unknowwhite@outlook.com
  * @WeChat: Ben_Xiaobai
- * @LastEditTime: 2021-12-07 16:04:28
+ * @LastEditTime: 2021-12-07 16:15:51
  * @FilePath: \bens_code\README.md
 -->
 调用ffmpeg压缩视频文件
@@ -29,11 +29,13 @@
 
 # 使用方法：
 
-1.安装依赖库 pymediainfo和prettytable
+1.安装对应系统的Python3版本。https://www.python.org/downloads/
 
-2.准备对应操作系统的ffmpeg，可以直接把对应操作系统的ffmpeg放到同目录下即可。
+2.安装依赖库 pip install -r requirements.txt 如果系统之前装过python2 则运行 pip3 install -r requirements.txt
 
-3.运行do_trans.py根据提示操作即可
+3.准备对应操作系统的ffmpeg，可以直接把对应操作系统的ffmpeg放到同目录下即可。如果没有独立编译好的，可以用官方版 下载地址 http://ffmpeg.org/download.html
+
+4.运行do_trans.py根据提示操作即可
 
 # 集群使用方法：
 
