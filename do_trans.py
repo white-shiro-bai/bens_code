@@ -328,16 +328,23 @@ def do_trans(org, tardir, srcdir, res_key, target_q, target_speed, target_audio,
         vf_param = ''
         res_param = ''
 
-    params = '-i "{org}" {res} {vf} -c:v {coder} -preset {speed} {q} {audio} "{tar}"'.format(
-        org=org, res=res_param, vf=vf_param,
-        coder=coder, speed=target_speed, q=target_q, audio=target_audio, tar=bpath)
-    cmd = '{ffmpeg} {params}'.format(ffmpeg=_ffmpeg_cmd(), params=params)
-    print(cmd)
+    # 用列表形式调用，绕开 cmd.exe 对含空格路径的解析问题
+    args = [_ffmpeg_cmd(), '-i', org]
+    if res_param:
+        args += res_param.split()
+    if vf_param:
+        # vf_param 形如 -vf "crop=..." ，需要拆成两个元素
+        args += ['-vf', vf_param.split('"')[1]]
+    args += ['-c:v', coder, '-preset', target_speed]
+    args += target_q.split()
+    args += target_audio.split()
+    args.append(bpath)
+    print(' '.join('"{}"'.format(a) if ' ' in a else a for a in args))
     try:
-        r_v = os.system(cmd)
+        r_v = subprocess.run(args).returncode
         return r_v
-    except:
-        pass
+    except Exception as e:
+        print("转码出错:", e)
 
 
 def do_snap(org, tardir, srcdir, gap):
@@ -356,13 +363,14 @@ def do_snap(org, tardir, srcdir, gap):
     if os.path.exists(bpath):
         return
     params = '-i "{org}" -r {gap} -q:v 2 -f image2 "{tar}-%3d.jpg"'.format(org=org, tar=bpath, gap=gap)
-    cmd = '{ffmpeg} {params}'.format(ffmpeg=_ffmpeg_cmd(), params=params)
-    print(cmd)
+    args = [_ffmpeg_cmd(), '-i', org, '-r', str(gap), '-q:v', '2', '-f', 'image2',
+            '{}-{}.jpg'.format(bpath, '%3d')]
+    print(' '.join('"{}"'.format(a) if ' ' in a else a for a in args))
     try:
-        r_v = os.system(cmd)
+        r_v = subprocess.run(args).returncode
         return r_v
-    except:
-        pass
+    except Exception as e:
+        print("截图出错:", e)
 
 
 def do_detect(org, tardir, srcdir):
