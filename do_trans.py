@@ -241,7 +241,7 @@ def _compute_scale(eff_w, eff_h, res_key, res_list):
     return res_key, sw, sh
 
 
-def do_trans(org, tardir, srcdir, res_key, target_q, target_speed, target_audio, coder, with_args, do_crop=False):
+def do_trans(org, tardir, srcdir, res_key, target_q, target_speed, target_audio, coder, with_args, do_crop=False, encode_filter='all'):
     if not os.path.exists(org):
         print("跳过（文件不存在）:", org)
         return
@@ -253,14 +253,44 @@ def do_trans(org, tardir, srcdir, res_key, target_q, target_speed, target_audio,
     res_list = {"4k":[3840,2160],"2k":[2560,1440],"fullhd":[1920,1080],
                 "hd":[1280,720],"xga":[1024,768],"sd":[852,480],"360":[640,360]}
 
+    # encode_filter 2/3/4 都需要先做黑边检测来决定是否跳过
     crop_params = None
-    if do_crop and duration:
-        crop_params, _, _, _ = get_crop_consensus(org, duration, org_width, org_height)
+    crop_pct_val = 100.0
+    if encode_filter != 'all' or do_crop:
+        if duration:
+            crop_params, _, _, _ = get_crop_consensus(org, duration, org_width, org_height)
+        if crop_params:
+            crop_pct_val = crop_params[0] * crop_params[1] / (org_width * org_height) * 100.0
 
-    if crop_params:
+    # 根据 encode_filter 决定是否跳过，以及最终是否裁切
+    has_crop = crop_params is not None
+    if encode_filter == 'no_crop':
+        if has_crop:
+            print("跳过（有黑边，仅转无黑边文件）:", org)
+            return
+        actual_do_crop = False
+    elif encode_filter == 'crop':
+        if not has_crop:
+            print("跳过（无黑边，仅转有黑边文件）:", org)
+            return
+        actual_do_crop = do_crop
+    elif encode_filter == 'crop_lt90':
+        if not has_crop or crop_pct_val >= 90.0:
+            print("跳过（无黑边或裁切后>=90%，仅转裁切后<90%的文件）:", org)
+            return
+        actual_do_crop = do_crop
+    else:
+        actual_do_crop = do_crop
+
+    # 若 actual_do_crop 但检测无结果，则不裁切
+    if actual_do_crop and not crop_params:
+        actual_do_crop = False
+
+    if actual_do_crop:
         eff_w, eff_h, cx, cy = crop_params
     else:
         eff_w, eff_h, cx, cy = org_width, org_height, 0, 0
+        crop_params = None  # 确保下面不走裁切分支
 
     actual_res_key, sw, sh = _compute_scale(eff_w, eff_h, res_key, res_list)
 
@@ -345,26 +375,31 @@ def do_detect(org, tardir, srcdir):
         return None
     print("[检测] {}".format(org))
     total = 10
+    org_pixels = org_width * org_height
     crop_params, confidence, candidate, cand_count = get_crop_consensus(
         org, duration, org_width, org_height, verbose=True)
     if crop_params:
         cw, ch, cx, cy = crop_params
+        pct = "{:.1f}%".format(cw * ch / org_pixels * 100)
         print("[有黑边 {}/{}] {}".format(confidence, total, org))
         return {
             "file": os.path.basename(org),
             "org_size": "{}x{}".format(org_width, org_height),
             "crop_size": "{}x{}".format(cw, ch),
+            "crop_pct": pct,
             "crop_param": "crop={}:{}:{}:{}".format(cw, ch, cx, cy),
             "confidence": "{}/{}".format(confidence, total),
             "do_crop": "Y",
         }
     elif candidate:
         cw, ch, cx, cy = candidate
+        pct = "{:.1f}%".format(cw * ch / org_pixels * 100)
         print("[参考 {}/{}] {}".format(cand_count, total, org))
         return {
             "file": os.path.basename(org),
             "org_size": "{}x{}".format(org_width, org_height),
             "crop_size": "{}x{}".format(cw, ch),
+            "crop_pct": pct,
             "crop_param": "crop={}:{}:{}:{}".format(cw, ch, cx, cy),
             "confidence": "{}/{}".format(cand_count, total),
             "do_crop": "N",
@@ -375,6 +410,7 @@ def do_detect(org, tardir, srcdir):
             "file": os.path.basename(org),
             "org_size": "{}x{}".format(org_width, org_height),
             "crop_size": "-",
+            "crop_pct": "-",
             "crop_param": "-",
             "confidence": "-",
             "do_crop": "N",
@@ -429,10 +465,15 @@ def play():
         with_args = ui(data={"limit_func":True,"desc":"转码输出文件是否包含参数信息","type":"option","display_key":"func_id","func_key":"func_id","data":[
             {"func_id":1,"func_name":"包含参数，方便对比转码质量（推荐）"},
             {"func_id":2,"func_name":"不包含参数，不支持同时转多版本"}]})[0]
-        crop_choice = ui(data={"limit_func":True,"desc":"转码时是否自动检测并裁切黑边（5个时间节点3个一致才裁切）","type":"option","display_key":"func_id","func_key":"func_id","data":[
+        crop_choice = ui(data={"limit_func":True,"desc":"转码时是否自动检测并裁切黑边（10个时间节点7个一致才裁切）","type":"option","display_key":"func_id","func_key":"func_id","data":[
             {"func_id":1,"func_name":"是，自动检测并裁切黑边"},
             {"func_id":2,"func_name":"否，保留原始画面"}]})[0]
         do_crop = (crop_choice == '1')
+        encode_filter = ui(data={"limit_func":True,"desc":"选择要转码的文件范围","type":"option","display_key":"func_id","func_key":"f","data":[
+            {"func_id":1,"f":"all",      "func_name":"转码全部文件"},
+            {"func_id":2,"f":"no_crop",  "func_name":"只转码不需要切黑边的文件（检测无黑边则转码，有黑边则跳过）"},
+            {"func_id":3,"f":"crop",     "func_name":"只转码需要切黑边的文件（检测有黑边则转码，无黑边则跳过）"},
+            {"func_id":4,"f":"crop_lt90","func_name":"只转码需要切黑边且裁切后像素<90%的文件"}]})[0]
     elif func_code == 'snap':
         gap = ui(data={"limit_func":True,"desc":"请输入截图的间隔，单位秒，可以支持小数点","type":"keyword","display_key":"截图间隔（秒）","allow_none":False})[0]
 
@@ -451,7 +492,7 @@ def play():
                             "res_key": res, "coder": coder,
                             "target_q": target_q, "target_speed": target_speed,
                             "target_audio": target_audio, "with_args": with_args,
-                            "do_crop": do_crop
+                            "do_crop": do_crop, "encode_filter": encode_filter
                         })
             elif func_code == 'snap':
                 job_list.append({"org": apath, "tardir": tardir, "srcdir": srcdir, "gap": gap})
@@ -477,11 +518,11 @@ def play():
         if all_results:
             out_path = os.path.join(srcdir, 'focus_list.txt')
             with open(out_path, 'w', encoding='utf-8') as f:
-                tb = PrettyTable(field_names=["file","org_size","crop_size","crop_param","confidence","do_crop"])
+                tb = PrettyTable(field_names=["file","org_size","crop_size","crop_pct","crop_param","confidence","do_crop"])
                 tb.padding_width = 1
                 tb.align = 'l'
                 for item in all_results:
-                    tb.add_row([item["file"], item["org_size"], item["crop_size"],
+                    tb.add_row([item["file"], item["org_size"], item["crop_size"], item["crop_pct"],
                                 item["crop_param"], item["confidence"], item["do_crop"]])
                 f.write(str(tb))
             has_crop = sum(1 for i in all_results if i["do_crop"] == "Y")
