@@ -301,7 +301,8 @@ def do_trans(org, tardir, srcdir, res_key, target_q, target_speed, target_audio,
             rel = rel[len(prefix):]
             break
     filename = os.path.basename(org)
-    q_tag = target_q.strip()[-3:-1].strip() if len(target_q.strip()) >= 3 else target_q.strip()
+    q_tag = re.search(r'\d+', target_q)
+    q_tag = q_tag.group() if q_tag else target_q.strip()
     if with_args == '1':
         bpath = os.path.join(tardir, rel, filename+'_'+actual_res_key+'_'+coder+'_'+q_tag+'_'+target_speed+'.mp4')
     else:
