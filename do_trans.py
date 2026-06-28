@@ -488,10 +488,13 @@ def play():
 
     # 收集文件路径列表，不读取视频信息
     job_list = []
+    skip_exts = {'.jpg', '.jpeg', '.png', '.gif'}
     for maindir, subdir, file_name_list in os.walk(srcdir):
         for filename in file_name_list:
             apath = os.path.join(maindir, filename)
             if tardir in apath:
+                continue
+            if os.path.splitext(filename)[1].lower() in skip_exts:
                 continue
             if func_code == 'encode':
                 for res in target_res.split(','):
